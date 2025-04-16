@@ -6,16 +6,21 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 
 public class HomepageUI extends javax.swing.JFrame {
     private JTable fileTable;
     private JScrollPane tableScrollPane;
     private DefaultTableModel tableModel;
+    private TableRowSorter<DefaultTableModel> rowSorter;
 
     public HomepageUI() {
         initComponents();
+        
+    fileTables.getColumnModel().getColumn(3).setCellRenderer(new TableActionCellRender());
 
     tableModel = new DefaultTableModel(
         new Object [][] {},
@@ -25,11 +30,13 @@ public class HomepageUI extends javax.swing.JFrame {
     ) {
         @Override
         public boolean isCellEditable(int row, int column) {
-            return column == 3; // Only the "Actions" column is editable
+            return column == 3; // Only "Actions" column is editable
         }
     };
 
-    fileTables.setModel(tableModel);
+        fileTables.setModel(tableModel);
+        rowSorter = new TableRowSorter<>(tableModel);
+        fileTables.setRowSorter(rowSorter);
 
     }
     @SuppressWarnings("unchecked")
@@ -239,11 +246,21 @@ public class HomepageUI extends javax.swing.JFrame {
 
         fileTables.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
+
             },
             new String [] {
-                "FilePanel Name", "FilePanel Size", "FilePanel Type", "Actions"
+                "File Name", "File Size", "File Type", "Action"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        fileTables.setRowHeight(50);
         filePane.setViewportView(fileTables);
 
         jPanel1.add(filePane);
@@ -314,11 +331,17 @@ public class HomepageUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void searchTxtFieldFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchTxtFieldFieldActionPerformed
-        // TODO add your handling code here:
+        searchBtn.doClick(); // Simulate button click
     }//GEN-LAST:event_searchTxtFieldFieldActionPerformed
 
     private void searchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchBtnActionPerformed
-        // TODO add your handling code here:
+        String searchText = searchTxtField.getText().trim();
+
+        if (searchText.length() == 0) {
+            rowSorter.setRowFilter(null); // Show all rows
+        } else {
+            rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 0)); // Filter by file name (column 0)
+        }
     }//GEN-LAST:event_searchBtnActionPerformed
 
     private void NewFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NewFileActionPerformed
@@ -344,7 +367,7 @@ public class HomepageUI extends javax.swing.JFrame {
         String fileSize = fileSizeInBytes + " bytes";
 
         DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
-        model.addRow(new Object[]{fileName, fileSize, fileType, "Open/Delete"});
+        model.addRow(new Object[]{fileName, fileSize, fileType, new PanelAction()});
     }
     }//GEN-LAST:event_NewFileActionPerformed
 
