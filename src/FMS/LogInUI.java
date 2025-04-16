@@ -1,12 +1,21 @@
 package FMS;
 
-import java.awt.Color;
+import java.util.prefs.Preferences;
 
 public class LogInUI extends javax.swing.JFrame {
+
+    private Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
 
     public LogInUI() {
         initComponents();
 
+        String savedEmail = prefs.get("email", "");
+        String savedPassword = prefs.get("password", "");
+        boolean rememberMe = prefs.getBoolean("remember", false);
+
+        jTextField1.setText(savedEmail);
+        jPasswordField1.setText(savedPassword);
+        Remember.setSelected(rememberMe);
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -199,6 +208,17 @@ public class LogInUI extends javax.swing.JFrame {
     } else if (password.isEmpty()) {
         javax.swing.JOptionPane.showMessageDialog(this, "Password is required.", "Login Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     } else {
+        // Handle "Remember Me"
+        if (Remember.isSelected()) {
+            prefs.put("email", email);
+            prefs.put("password", password);
+            prefs.putBoolean("remember", true);
+        } else {
+            prefs.remove("email");
+            prefs.remove("password");
+            prefs.putBoolean("remember", false);
+        }
+
         // Proceed to Homepage
         HomepageUI homepage = new HomepageUI();
         homepage.setVisible(true);
