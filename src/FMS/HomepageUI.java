@@ -1,5 +1,7 @@
 package FMS;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -22,6 +24,7 @@ public class HomepageUI extends javax.swing.JFrame {
         
     fileTables.getColumnModel().getColumn(3).setCellRenderer(new TableActionCellRender());
 
+    // Setup the table model
     tableModel = new DefaultTableModel(
         new Object [][] {},
         new String [] {
@@ -34,9 +37,29 @@ public class HomepageUI extends javax.swing.JFrame {
         }
     };
 
-        fileTables.setModel(tableModel);
-        rowSorter = new TableRowSorter<>(tableModel);
-        fileTables.setRowSorter(rowSorter);
+    fileTables.setModel(tableModel);
+    rowSorter = new TableRowSorter<>(tableModel);
+    fileTables.setRowSorter(rowSorter);
+
+    // ✅ Moved AFTER the table is initialized
+    fileTables.getColumnModel().getColumn(3).setCellRenderer(new TableActionCellRender());
+
+    // Mouse Listeners
+    Logout.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            new LogInUI().setVisible(true);
+            dispose(); // Close HomepageUI
+        }
+    });
+
+    Account.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            new AccountUI().setVisible(true);
+            dispose(); // Close HomepageUI
+        }
+    });
 
     }
     @SuppressWarnings("unchecked")

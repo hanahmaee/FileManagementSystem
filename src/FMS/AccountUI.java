@@ -1,5 +1,6 @@
 package FMS;
 
+import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -11,7 +12,27 @@ public class AccountUI extends javax.swing.JFrame {
 
     public AccountUI() {
         initComponents();
+        addEventHandlers();
+
     }
+    
+    private void addEventHandlers() {
+    // Navigate to HomepageUI when "Files" is clicked
+    File.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseClicked(java.awt.event.MouseEvent evt) {
+            new HomepageUI().setVisible(true);
+            dispose(); // close current window
+        }
+    });
+
+    // Navigate to Login when "Logout" is clicked
+    Logout.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseClicked(MouseEvent e) {
+            new LogInUI().setVisible(true);
+            dispose(); // Close HomepageUI
+        }
+    });
+}
     @SuppressWarnings("unchecked")
     
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
