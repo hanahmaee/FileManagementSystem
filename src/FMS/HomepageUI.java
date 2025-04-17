@@ -22,28 +22,6 @@ public class HomepageUI extends javax.swing.JFrame {
     public HomepageUI() {
         initComponents();
         
-    fileTables.getColumnModel().getColumn(3).setCellRenderer(new TableActionCellRender());
-
-    // Setup the table model
-    tableModel = new DefaultTableModel(
-        new Object [][] {},
-        new String [] {
-            "File Name", "File Size", "File Type", "Actions"
-        }
-    ) {
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return column == 3; // Only "Actions" column is editable
-        }
-    };
-
-    fileTables.setModel(tableModel);
-    rowSorter = new TableRowSorter<>(tableModel);
-    fileTables.setRowSorter(rowSorter);
-
-    // ✅ Moved AFTER the table is initialized
-    fileTables.getColumnModel().getColumn(3).setCellRenderer(new TableActionCellRender());
-
     // Mouse Listeners
     Logout.addMouseListener(new MouseAdapter() {
         @Override
@@ -369,39 +347,55 @@ public class HomepageUI extends javax.swing.JFrame {
 
     private void NewFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NewFileActionPerformed
     JFileChooser fileChooser = new JFileChooser();
-    fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+    fileChooser.setMultiSelectionEnabled(true); // Allow selecting multiple files
+    int option = fileChooser.showOpenDialog(this);
 
-    int result = fileChooser.showOpenDialog(this);  // Show file chooser
+    if (option == JFileChooser.APPROVE_OPTION) {
+        File[] selectedFiles = fileChooser.getSelectedFiles();
+        DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
 
-    if (result == JFileChooser.APPROVE_OPTION) {
-        File selectedFile = fileChooser.getSelectedFile();
+        for (File file : selectedFiles) {
+            String fileName = file.getName();
+            long fileSize = file.length();
+            String fileType = getFileExtension(file);
+            String action = "Open"; // You can update this to a button later if needed
 
-        String fileName = selectedFile.getName();
-        long fileSizeInBytes = selectedFile.length();
-        String fileType = "";
-
-        int dotIndex = fileName.lastIndexOf(".");
-        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-            fileType = fileName.substring(dotIndex + 1);
-        } else {
-            fileType = "Unknown";
+            model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
         }
 
-        String fileSize = fileSizeInBytes + " bytes";
-
-        DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
-        model.addRow(new Object[]{fileName, fileSize, fileType, new PanelAction()});
+        // Set sorter only once, if not already set
+        if (rowSorter == null) {
+            tableModel = (DefaultTableModel) fileTables.getModel();
+            rowSorter = new TableRowSorter<>(tableModel);
+            fileTables.setRowSorter(rowSorter);
+        }
     }
     }//GEN-LAST:event_NewFileActionPerformed
 
-    public static void main(String args[]) {
-       
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new HomepageUI().setVisible(true);
-            }
-        });
+    private String getFileExtension(File file) {
+        String name = file.getName();
+        int lastIndex = name.lastIndexOf('.');
+        if (lastIndex > 0 && lastIndex < name.length() - 1) {
+            return name.substring(lastIndex + 1).toUpperCase();
+        }
+        return "Unknown";
     }
+
+    private String readableFileSize(long size) {
+        if (size <= 0) return "0";
+        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
+    }
+
+        public static void main(String args[]) {
+
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    new HomepageUI().setVisible(true);
+                }
+            });
+        }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Account;
