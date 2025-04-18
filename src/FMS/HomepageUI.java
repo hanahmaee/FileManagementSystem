@@ -11,6 +11,11 @@ import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 
 public class HomepageUI extends javax.swing.JFrame {
@@ -18,9 +23,12 @@ public class HomepageUI extends javax.swing.JFrame {
     private JScrollPane tableScrollPane;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
+    private static String loggedInEmail;
 
-    public HomepageUI() {
+    public HomepageUI(String email) {
+        this.loggedInEmail = email;
         initComponents();
+        loadUserFile();
         
     // Mouse Listeners
     Logout.addMouseListener(new MouseAdapter() {
@@ -353,25 +361,39 @@ public class HomepageUI extends javax.swing.JFrame {
     if (option == JFileChooser.APPROVE_OPTION) {
         File[] selectedFiles = fileChooser.getSelectedFiles();
         DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
+        String email = loggedInEmail;
+        
+        try (Connection conn = DBConnection.getConnection()){
+            for (File file : selectedFiles) {
+                String fileName = file.getName();
+                long fileSize = file.length();
+                String fileType = getFileExtension(file);
+                String action = "Open"; // You can update this to a button later if needed
 
-        for (File file : selectedFiles) {
-            String fileName = file.getName();
-            long fileSize = file.length();
-            String fileType = getFileExtension(file);
-            String action = "Open"; // You can update this to a button later if needed
-
-            model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
+                String sql = "INSERT INTO file (file_name, file_size, file_type, email) VALUES (?, ?, ?, ?)";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)){
+                    stmt.setString(1, fileName);
+                    stmt.setLong(2, fileSize);
+                    stmt.setString(3, fileType);
+                    stmt.setString(4, email);
+                    stmt.executeUpdate();
+                } catch (SQLException e){
+                    e.printStackTrace();
+                    javax.swing.JOptionPane.showMessageDialog(this, "Failed to save file to database.", "File Failed", javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
+                
+                model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
         }
-
-        // Set sorter only once, if not already set
-        if (rowSorter == null) {
+            if (rowSorter == null) {
             tableModel = (DefaultTableModel) fileTables.getModel();
             rowSorter = new TableRowSorter<>(tableModel);
             fileTables.setRowSorter(rowSorter);
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+            }
         }
-    }
     }//GEN-LAST:event_NewFileActionPerformed
-
     private String getFileExtension(File file) {
         String name = file.getName();
         int lastIndex = name.lastIndexOf('.');
@@ -387,12 +409,34 @@ public class HomepageUI extends javax.swing.JFrame {
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
     }
+    
+    private void loadUserFile(){
+        DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
+        model.setRowCount(0);
+        
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement("SELECT file_name, file_size, file_type FROM file WHERE email = ?")){
+            stmt.setString(1, loggedInEmail);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()){
+                String fileName = rs.getString("file_name");
+                long fileSize = rs.getLong("file_size");
+                String fileType = rs.getString("file_type");
+                String action = "Open";
+                
+                model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
         public static void main(String args[]) {
 
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                    new HomepageUI().setVisible(true);
+                    new HomepageUI(loggedInEmail).setVisible(true);
                 }
             });
         }

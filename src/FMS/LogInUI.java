@@ -1,6 +1,12 @@
 package FMS;
 
+import java.awt.event.ActionEvent;
 import java.util.prefs.Preferences;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class LogInUI extends javax.swing.JFrame {
 
@@ -16,6 +22,13 @@ public class LogInUI extends javax.swing.JFrame {
         jTextField1.setText(savedEmail);
         jPasswordField1.setText(savedPassword);
         Remember.setSelected(rememberMe);
+        
+        jPasswordField1.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                LogInBtnActionPerformed(evt);
+            }
+        });
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -205,25 +218,39 @@ public class LogInUI extends javax.swing.JFrame {
         javax.swing.JOptionPane.showMessageDialog(this, "Email and Password are required.", "Login Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     } else if (email.isEmpty()) {
         javax.swing.JOptionPane.showMessageDialog(this, "Email is required.", "Login Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+    } else if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")){
+        javax.swing.JOptionPane.showMessageDialog(this, "Invalid Email Format", "Login Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     } else if (password.isEmpty()) {
         javax.swing.JOptionPane.showMessageDialog(this, "Password is required.", "Login Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     } else {
-        // Handle "Remember Me"
-        if (Remember.isSelected()) {
-            prefs.put("email", email);
-            prefs.put("password", password);
-            prefs.putBoolean("remember", true);
-        } else {
-            prefs.remove("email");
-            prefs.remove("password");
-            prefs.putBoolean("remember", false);
+        try (Connection conn = DBConnection.getConnection();
+                java.sql.PreparedStatement stmt = conn.prepareStatement("SELECT * FROM login WHERE email = ? AND password = ?")) {
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+            
+            java.sql.ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()){
+                if (Remember.isSelected()){
+                    prefs.put("email", email);
+                    prefs.put("password", password);
+                    prefs.putBoolean("remember", true);
+                } else {
+                    prefs.remove("email");
+                    prefs.remove("password");
+                    prefs.putBoolean("remember", false);
+                }
+                
+                HomepageUI homepage = new HomepageUI(email);
+                homepage.setVisible(true);
+                this.dispose();
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this, "Incorrect email or password.", "Login Failed", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            }
         }
-
-        // Proceed to Homepage
-        HomepageUI homepage = new HomepageUI();
-        homepage.setVisible(true);
-        this.dispose();
-    }
     }//GEN-LAST:event_LogInBtnActionPerformed
 
     private void jPasswordField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPasswordField1ActionPerformed
