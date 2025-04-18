@@ -241,7 +241,7 @@ public class LogInUI extends javax.swing.JFrame {
                     prefs.putBoolean("remember", false);
                 }
                 
-                HomepageUI homepage = new HomepageUI();
+                HomepageUI homepage = new HomepageUI(email);
                 homepage.setVisible(true);
                 this.dispose();
             } else {
@@ -249,7 +249,7 @@ public class LogInUI extends javax.swing.JFrame {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            }
         }
     }//GEN-LAST:event_LogInBtnActionPerformed
 
