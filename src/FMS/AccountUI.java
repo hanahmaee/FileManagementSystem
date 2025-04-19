@@ -1,5 +1,8 @@
 package FMS;
 
+import FMS.DatabaseUtils;
+import FMS.HomepageUI;
+import FMS.LogInUI;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
@@ -10,20 +13,33 @@ public class AccountUI extends javax.swing.JFrame {
     private JTable fileTable;
     private JScrollPane tableScrollPane;
     private DefaultTableModel tableModel;
+    private String email;
+    private String password;
 
-    public AccountUI() {
-        initComponents();
-        addEventHandlers();
-
-    }
+public AccountUI(String email, String password) {
+    this.email = email;
+    this.password = password;
+    initComponents();
+    emailField.setText(email);
     
+    emailField.setEditable(false);
+    passField.setEditable(false);
+    
+    StringBuilder masked = new StringBuilder();
+    for (int i = 0; i < password.length(); i++) masked.append("*");
+    passField.setText(masked.toString());
+
+    addEventHandlers(); // ← Don’t forget this!
+}
+
 private void addEventHandlers() {
     // Navigate to HomepageUI when "Files" is clicked
     File.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-            String email = emailField.getText(); // Get the email from the emailField
-            new HomepageUI(email).setVisible(true); // Pass the email to HomepageUI
+            String email = emailField.getText();       // ✅ already here
+            String password = passField.getText();     // ✅ get password too
+            new HomepageUI(email, password).setVisible(true); // ✅ fix constructor
             dispose(); // Close AccountUI
         }
     });
@@ -31,10 +47,11 @@ private void addEventHandlers() {
     // Navigate to Login when "Logout" is clicked
     Logout.addMouseListener(new MouseAdapter() {
         public void mouseClicked(MouseEvent e) {
-            new LogInUI().setVisible(true);
+                new LogInUI().setVisible(true);
             dispose(); // Close AccountUI
         }
     });
+    
 }
     @SuppressWarnings("unchecked")
     
@@ -320,14 +337,9 @@ private void addEventHandlers() {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[]) {
-       
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new AccountUI().setVisible(true);
-            }
-        });
-    }
+     public static void main(String[] args) {
+    
+     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Account;

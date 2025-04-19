@@ -241,8 +241,7 @@ public class LogInUI extends javax.swing.JFrame {
                     prefs.putBoolean("remember", false);
                 }
                 
-                HomepageUI homepage = new HomepageUI(email);
-                homepage.setVisible(true);
+                new HomepageUI(email, password).setVisible(true);
                 this.dispose();
             } else {
                 javax.swing.JOptionPane.showMessageDialog(this, "Incorrect email or password.", "Login Failed", javax.swing.JOptionPane.ERROR_MESSAGE);

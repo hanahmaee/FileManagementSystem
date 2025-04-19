@@ -24,9 +24,12 @@ public class HomepageUI extends javax.swing.JFrame {
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
     private static String loggedInEmail;
+    private static String loggedInPassword;
 
-public HomepageUI(String email) {
-        this.loggedInEmail = email;
+
+public HomepageUI(String email, String password) {
+    this.loggedInEmail = email;
+    this.loggedInPassword = password;
         initComponents();
         loadUserFile();
     
@@ -41,19 +44,19 @@ public HomepageUI(String email) {
     FilePanel.addMouseListener(new MouseAdapter() {
     @Override
     public void mouseClicked(MouseEvent e) {
-        new HomepageUI(loggedInEmail).setVisible(true);
+    new HomepageUI(loggedInEmail, loggedInPassword).setVisible(true); // ✅ Now with password
         dispose(); // Close the current HomepageUI to refresh the view
         }
     });
 
-
     Account.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-            new AccountUI().setVisible(true);
+            new AccountUI(loggedInEmail, loggedInPassword).setVisible(true);
             dispose(); // Close HomepageUI
         }
     });
+
     fileTables.addMouseListener(new MouseAdapter() {
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -514,7 +517,7 @@ public HomepageUI(String email) {
 
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                    new HomepageUI(loggedInEmail).setVisible(true);
+                new HomepageUI(loggedInEmail, loggedInPassword).setVisible(true);
                 }
             });
         }
