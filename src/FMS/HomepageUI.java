@@ -25,13 +25,66 @@ public class HomepageUI extends javax.swing.JFrame {
     private TableRowSorter<DefaultTableModel> rowSorter;
     private static String loggedInEmail;
     private static String loggedInPassword;
-
+    private String oldFileNameBeforeEdit = null;
 
 public HomepageUI(String email, String password) {
     this.loggedInEmail = email;
     this.loggedInPassword = password;
         initComponents();
         loadUserFile();
+        DefaultCellEditor fileNameEditor = new DefaultCellEditor(new javax.swing.JTextField());
+        fileTables.getColumnModel().getColumn(0).setCellEditor(fileNameEditor);
+
+fileNameEditor.addCellEditorListener(new javax.swing.event.CellEditorListener() {
+    @Override
+    public void editingStopped(javax.swing.event.ChangeEvent e) {
+        int row = fileTables.getSelectedRow();
+        if (row == -1) return;
+        
+        String newFileName = (String) fileTables.getCellEditor(row, 0).getCellEditorValue();
+        if(newFileName.equals(oldFileNameBeforeEdit)){
+            return;
+        }
+        
+        int response = javax.swing.JOptionPane.showConfirmDialog(
+            null,
+            "Do you want to rename this file?",
+            "Rename File",
+            javax.swing.JOptionPane.YES_NO_OPTION
+        );
+
+        if (response == javax.swing.JOptionPane.YES_OPTION) {
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE file SET file_name = ? WHERE file_name = ? AND email = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, newFileName);
+                    stmt.setString(2, oldFileNameBeforeEdit);
+                    stmt.setString(3, loggedInEmail);
+
+                    int affectedRows = stmt.executeUpdate();
+                    if (affectedRows > 0) {
+                        javax.swing.JOptionPane.showMessageDialog(null, "File renamed successfully!");
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(null, "File rename failed in the database.");
+                        fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(null, "Database error.");
+                fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+            }
+        } else {
+            fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+        }
+    }
+
+    @Override
+    public void editingCanceled(javax.swing.event.ChangeEvent e) {
+        // No action needed here
+    }
+});
+
     
     Logout.addMouseListener(new MouseAdapter() {
         @Override
@@ -62,7 +115,13 @@ public HomepageUI(String email, String password) {
     public void mouseClicked(MouseEvent e) {
         int row = fileTables.rowAtPoint(e.getPoint());
         int column = fileTables.columnAtPoint(e.getPoint());
+        int rows = fileTables.rowAtPoint(e.getPoint());
+        int col = fileTables.columnAtPoint(e.getPoint());
 
+        if (col == 0) { // "File Name" column
+        oldFileNameBeforeEdit = (String) fileTables.getValueAt(rows, col);
+        }
+                
         if (column == 3) { // "Action" column
             String actionValue = fileTables.getValueAt(row, column).toString();
             if ("Delete".equalsIgnoreCase(actionValue)) {
@@ -333,7 +392,7 @@ public HomepageUI(String email, String password) {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                true, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
