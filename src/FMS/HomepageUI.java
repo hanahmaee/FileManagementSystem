@@ -24,13 +24,68 @@ public class HomepageUI extends javax.swing.JFrame {
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
     private static String loggedInEmail;
+    private static String loggedInPassword;
+    private String oldFileNameBeforeEdit = null;
 
-    public HomepageUI(String email) {
-        this.loggedInEmail = email;
+public HomepageUI(String email, String password) {
+    this.loggedInEmail = email;
+    this.loggedInPassword = password;
         initComponents();
         loadUserFile();
+        DefaultCellEditor fileNameEditor = new DefaultCellEditor(new javax.swing.JTextField());
+        fileTables.getColumnModel().getColumn(0).setCellEditor(fileNameEditor);
+
+fileNameEditor.addCellEditorListener(new javax.swing.event.CellEditorListener() {
+    @Override
+    public void editingStopped(javax.swing.event.ChangeEvent e) {
+        int row = fileTables.getSelectedRow();
+        if (row == -1) return;
         
-    // Mouse Listeners
+        String newFileName = (String) fileTables.getCellEditor(row, 0).getCellEditorValue();
+        if(newFileName.equals(oldFileNameBeforeEdit)){
+            return;
+        }
+        
+        int response = javax.swing.JOptionPane.showConfirmDialog(
+            null,
+            "Do you want to rename this file?",
+            "Rename File",
+            javax.swing.JOptionPane.YES_NO_OPTION
+        );
+
+        if (response == javax.swing.JOptionPane.YES_OPTION) {
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE file SET file_name = ? WHERE file_name = ? AND email = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setString(1, newFileName);
+                    stmt.setString(2, oldFileNameBeforeEdit);
+                    stmt.setString(3, loggedInEmail);
+
+                    int affectedRows = stmt.executeUpdate();
+                    if (affectedRows > 0) {
+                        javax.swing.JOptionPane.showMessageDialog(null, "File renamed successfully!");
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(null, "File rename failed in the database.");
+                        fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(null, "Database error.");
+                fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+            }
+        } else {
+            fileTables.setValueAt(oldFileNameBeforeEdit, row, 0); // revert
+        }
+    }
+
+    @Override
+    public void editingCanceled(javax.swing.event.ChangeEvent e) {
+        // No action needed here
+    }
+});
+
+    
     Logout.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -38,14 +93,89 @@ public class HomepageUI extends javax.swing.JFrame {
             dispose(); // Close HomepageUI
         }
     });
+    
+    FilePanel.addMouseListener(new MouseAdapter() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    new HomepageUI(loggedInEmail, loggedInPassword).setVisible(true); // ✅ Now with password
+        dispose(); // Close the current HomepageUI to refresh the view
+        }
+    });
 
     Account.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-            new AccountUI().setVisible(true);
+            new AccountUI(loggedInEmail, loggedInPassword).setVisible(true);
             dispose(); // Close HomepageUI
         }
     });
+
+    fileTables.addMouseListener(new MouseAdapter() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        int row = fileTables.rowAtPoint(e.getPoint());
+        int column = fileTables.columnAtPoint(e.getPoint());
+        int rows = fileTables.rowAtPoint(e.getPoint());
+        int col = fileTables.columnAtPoint(e.getPoint());
+
+        if (col == 0) { // "File Name" column
+        oldFileNameBeforeEdit = (String) fileTables.getValueAt(rows, col);
+        }
+                
+        if (column == 3) { // "Action" column
+            String actionValue = fileTables.getValueAt(row, column).toString();
+            if ("Delete".equalsIgnoreCase(actionValue)) {
+                int confirm = javax.swing.JOptionPane.showConfirmDialog(
+                    HomepageUI.this,
+                    "Do you want to delete this file?",
+                    "Confirm Delete",
+                    javax.swing.JOptionPane.YES_NO_OPTION
+                );
+
+                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                    String fileName = fileTables.getValueAt(row, 0).toString(); // Get file name from column 0
+                    DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
+
+                    // Delete from database
+                    try (Connection conn = DBConnection.getConnection()) {
+                        String sql = "DELETE FROM file WHERE file_name = ? AND email = ?";
+                        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                            stmt.setString(1, fileName);
+                            stmt.setString(2, loggedInEmail);
+
+                            int affectedRows = stmt.executeUpdate();
+
+                            if (affectedRows > 0) {
+                                model.removeRow(row); // Only remove from UI if deletion in DB was successful
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    HomepageUI.this,
+                                    "File deleted successfully.",
+                                    "Success",
+                                    javax.swing.JOptionPane.INFORMATION_MESSAGE
+                                );
+                            } else {
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    HomepageUI.this,
+                                    "File not found or failed to delete.",
+                                    "Error",
+                                    javax.swing.JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        javax.swing.JOptionPane.showMessageDialog(
+                            HomepageUI.this,
+                            "Database error occurred while deleting file.",
+                            "Error",
+                            javax.swing.JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            }
+        }
+    }
+});
 
     }
     @SuppressWarnings("unchecked")
@@ -262,7 +392,7 @@ public class HomepageUI extends javax.swing.JFrame {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                true, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -368,7 +498,7 @@ public class HomepageUI extends javax.swing.JFrame {
                 String fileName = file.getName();
                 long fileSize = file.length();
                 String fileType = getFileExtension(file);
-                String action = "Open"; // You can update this to a button later if needed
+                String action = "Delete"; // You can update this to a button later if needed
 
                 String sql = "INSERT INTO file (file_name, file_size, file_type, email) VALUES (?, ?, ?, ?)";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)){
@@ -411,32 +541,42 @@ public class HomepageUI extends javax.swing.JFrame {
     }
     
     private void loadUserFile(){
-        DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
-        model.setRowCount(0);
-        
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement("SELECT file_name, file_size, file_type FROM file WHERE email = ?")){
-            stmt.setString(1, loggedInEmail);
-            ResultSet rs = stmt.executeQuery();
-            
-            while (rs.next()){
-                String fileName = rs.getString("file_name");
-                long fileSize = rs.getLong("file_size");
-                String fileType = rs.getString("file_type");
-                String action = "Open";
-                
-                model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    DefaultTableModel model = (DefaultTableModel) fileTables.getModel();
+    model.setRowCount(0);
+    
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement("SELECT file_name, file_size, file_type FROM file WHERE email = ?")) {
+
+        stmt.setString(1, loggedInEmail);
+        ResultSet rs = stmt.executeQuery();
+
+        while (rs.next()) {
+            String fileName = rs.getString("file_name");
+            long fileSize = rs.getLong("file_size");
+            String fileType = rs.getString("file_type");
+            String action = "Delete"; // Placeholder action
+
+            model.addRow(new Object[]{fileName, readableFileSize(fileSize), fileType, action});
         }
+
+        if (rowSorter == null) {
+            tableModel = model;
+            rowSorter = new TableRowSorter<>(tableModel);
+            fileTables.setRowSorter(rowSorter);
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        javax.swing.JOptionPane.showMessageDialog(this, "Failed to load files from the database.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
     }
+}
+
 
         public static void main(String args[]) {
 
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                    new HomepageUI(loggedInEmail).setVisible(true);
+                new HomepageUI(loggedInEmail, loggedInPassword).setVisible(true);
                 }
             });
         }

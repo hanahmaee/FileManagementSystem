@@ -45,7 +45,6 @@ public class LogInUI extends javax.swing.JFrame {
         jPasswordField1 = new javax.swing.JPasswordField();
         LogInBtn = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
-        ForgotPass = new javax.swing.JLabel();
         Remember = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -127,9 +126,6 @@ public class LogInUI extends javax.swing.JFrame {
         jLabel5.setForeground(new java.awt.Color(0, 180, 216));
         jLabel5.setText("Welcome Back!");
 
-        ForgotPass.setForeground(new java.awt.Color(0, 0, 0));
-        ForgotPass.setText("Forgot Password?");
-
         Remember.setBackground(new java.awt.Color(255, 255, 255));
         Remember.setForeground(new java.awt.Color(0, 0, 0));
         Remember.setText("Remember Me");
@@ -152,11 +148,8 @@ public class LogInUI extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, RightLayout.createSequentialGroup()
                         .addGroup(RightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
-                            .addGroup(RightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addGroup(RightLayout.createSequentialGroup()
-                                    .addComponent(Remember)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(ForgotPass))
+                            .addGroup(RightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(Remember, javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(LogInBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -177,9 +170,7 @@ public class LogInUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(RightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Remember)
-                    .addComponent(ForgotPass))
+                .addComponent(Remember)
                 .addGap(18, 18, 18)
                 .addComponent(LogInBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(268, Short.MAX_VALUE))
@@ -241,8 +232,7 @@ public class LogInUI extends javax.swing.JFrame {
                     prefs.putBoolean("remember", false);
                 }
                 
-                HomepageUI homepage = new HomepageUI(email);
-                homepage.setVisible(true);
+                new HomepageUI(email, password).setVisible(true);
                 this.dispose();
             } else {
                 javax.swing.JOptionPane.showMessageDialog(this, "Incorrect email or password.", "Login Failed", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -289,7 +279,6 @@ public class LogInUI extends javax.swing.JFrame {
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel ForgotPass;
     private javax.swing.JPanel Left;
     private javax.swing.JButton LogInBtn;
     private javax.swing.JCheckBox Remember;

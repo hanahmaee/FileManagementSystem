@@ -1,5 +1,9 @@
 package FMS;
 
+import FMS.DatabaseUtils;
+import FMS.HomepageUI;
+import FMS.LogInUI;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -9,29 +13,45 @@ public class AccountUI extends javax.swing.JFrame {
     private JTable fileTable;
     private JScrollPane tableScrollPane;
     private DefaultTableModel tableModel;
+    private String email;
+    private String password;
 
-    public AccountUI() {
-        initComponents();
-        addEventHandlers();
-
-    }
+public AccountUI(String email, String password) {
+    this.email = email;
+    this.password = password;
+    initComponents();
+    emailField.setText(email);
     
-    private void addEventHandlers() {
+    emailField.setEditable(false);
+    passField.setEditable(false);
+    
+    StringBuilder masked = new StringBuilder();
+    for (int i = 0; i < password.length(); i++) masked.append("*");
+    passField.setText(masked.toString());
+
+    addEventHandlers(); // ← Don’t forget this!
+}
+
+private void addEventHandlers() {
     // Navigate to HomepageUI when "Files" is clicked
-    File.addMouseListener(new java.awt.event.MouseAdapter() {
-        public void mouseClicked(java.awt.event.MouseEvent evt) {
-            new HomepageUI().setVisible(true);
-            dispose(); // close current window
+    File.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            String email = emailField.getText();       // ✅ already here
+            String password = passField.getText();     // ✅ get password too
+            new HomepageUI(email, password).setVisible(true); // ✅ fix constructor
+            dispose(); // Close AccountUI
         }
     });
 
     // Navigate to Login when "Logout" is clicked
-    Logout.addMouseListener(new java.awt.event.MouseAdapter() {
+    Logout.addMouseListener(new MouseAdapter() {
         public void mouseClicked(MouseEvent e) {
-            new LogInUI().setVisible(true);
-            dispose(); // Close HomepageUI
+                new LogInUI().setVisible(true);
+            dispose(); // Close AccountUI
         }
     });
+    
 }
     @SuppressWarnings("unchecked")
     
@@ -55,6 +75,12 @@ public class AccountUI extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        passPanel = new javax.swing.JPanel();
+        passTxt = new javax.swing.JLabel();
+        passField = new javax.swing.JTextField();
+        emailPanel = new javax.swing.JPanel();
+        emailTxt = new javax.swing.JLabel();
+        emailField = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -227,6 +253,70 @@ public class AccountUI extends javax.swing.JFrame {
         jPanel1.add(jLabel7);
         jLabel7.setBounds(330, 80, 300, 25);
 
+        passPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        passTxt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        passTxt.setForeground(new java.awt.Color(0, 0, 0));
+        passTxt.setText("PASSWORD");
+
+        passField.setBackground(new java.awt.Color(204, 204, 204));
+
+        javax.swing.GroupLayout passPanelLayout = new javax.swing.GroupLayout(passPanel);
+        passPanel.setLayout(passPanelLayout);
+        passPanelLayout.setHorizontalGroup(
+            passPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(passPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(passPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(passTxt)
+                    .addComponent(passField, javax.swing.GroupLayout.PREFERRED_SIZE, 517, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(57, Short.MAX_VALUE))
+        );
+        passPanelLayout.setVerticalGroup(
+            passPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(passPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(passTxt)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(passField, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(24, Short.MAX_VALUE))
+        );
+
+        jPanel1.add(passPanel);
+        passPanel.setBounds(350, 290, 580, 90);
+
+        emailPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        emailTxt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        emailTxt.setForeground(new java.awt.Color(0, 0, 0));
+        emailTxt.setText("EMAIL");
+
+        emailField.setBackground(new java.awt.Color(204, 204, 204));
+
+        javax.swing.GroupLayout emailPanelLayout = new javax.swing.GroupLayout(emailPanel);
+        emailPanel.setLayout(emailPanelLayout);
+        emailPanelLayout.setHorizontalGroup(
+            emailPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(emailPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(emailPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(emailTxt)
+                    .addComponent(emailField, javax.swing.GroupLayout.PREFERRED_SIZE, 517, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(57, Short.MAX_VALUE))
+        );
+        emailPanelLayout.setVerticalGroup(
+            emailPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(emailPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(emailTxt)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(emailField, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(24, Short.MAX_VALUE))
+        );
+
+        jPanel1.add(emailPanel);
+        emailPanel.setBounds(350, 200, 580, 90);
+
         jLabel1.setBackground(new java.awt.Color(204, 204, 204));
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/components/fms.png"))); // NOI18N
         jPanel1.add(jLabel1);
@@ -247,14 +337,9 @@ public class AccountUI extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[]) {
-       
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new AccountUI().setVisible(true);
-            }
-        });
-    }
+     public static void main(String[] args) {
+    
+     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Account;
@@ -265,6 +350,9 @@ public class AccountUI extends javax.swing.JFrame {
     private javax.swing.JLabel FilesTxt;
     private javax.swing.JPanel Logout;
     private javax.swing.JLabel LogoutTxt;
+    private javax.swing.JTextField emailField;
+    private javax.swing.JPanel emailPanel;
+    private javax.swing.JLabel emailTxt;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -275,5 +363,8 @@ public class AccountUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JTextField passField;
+    private javax.swing.JPanel passPanel;
+    private javax.swing.JLabel passTxt;
     // End of variables declaration//GEN-END:variables
 }
